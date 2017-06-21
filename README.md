@@ -1,10 +1,7 @@
-# Some tutorials for WebPPL
+# Bayesian data analysis: An introduction using probabilistic programs
 
-Suggested order
+## By: Michael Henry Tessler
 
-1. intro
-2. bayes-rule
-3. binomials
-4. inference-patterns
+[Hosted here](http://mhtess.github.io/bdappl/)
 
-Code can be copied and run in [webppl.org](http://webppl.org)
+To build locally, run `jekyll serve --watch` and go to `http://127.0.0.1:4000/probLang/`.
