@@ -4,4 +4,4 @@
 
 [Hosted here](http://mhtess.github.io/bdappl/)
 
-To build locally, run `jekyll serve --watch` and go to `http://127.0.0.1:4000/probLang/`.
+To build locally, run `jekyll serve --watch` and go to `http://127.0.0.1:4000/bdappl/`.

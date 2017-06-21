@@ -27,12 +27,9 @@ M. H. Tessler (2017). *Bayesian data analysis: An introduction using probabilist
 - [Probabilistic Models of Cognition](https://probmods.org): An introduction to computational cognitive science and the probabilistic programming language WebPPL
 - [The Design and Implementation of Probabilistic Programming Languages](http://dippl.org): An introduction to probabilistic programming languages, WebPPL in particular
 - [Modeling Agents with Probabilistic Programs](http://agentmodels.org): An introduction to formal models of rational agents using WebPPL
-- [Pragmatic language interpretation as probabilistic inference](http://langcog.stanford.edu/papers_new/goodman-2016-underrev.pdf): A recent review of the RSA framework
+- [Pragmatic language interpretation as probabilistic inference](http://langcog.stanford.edu/papers_new/goodman-2016-underrev.pdf): A recent review of the language understanding as probabilistic inference
 - [webppl.org](http://webppl.org): An online editor for WebPPL
 - [WebPPL documentation](http://webppl.readthedocs.io/en/master/)
-- [WebPPL-viz](http://probmods.github.io/webppl-viz/): A summary of the vizualization options in WebPPL
+- [WebPPL-viz](http://probmods.github.io/webppl-viz/): A summary of the visualization options in WebPPL
 - [Forest](http://forestdb.org): A Repository for probabilistic models
 - [RWebPPL](https://github.com/mhtess/rwebppl): If you would rather use WebPPL within R
-- [WebPPL Tutorials](https://github.com/mhtess/webppl-tutorials): Basic tutorials for WebPPL
-
-## Acknowledgments
