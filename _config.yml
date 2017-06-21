@@ -1,8 +1,8 @@
 # Site settings
 
-title: Probabilistic languge understanding
-baseurl: "/probLang"
-url: "http://gscontras.github.io/probLang"
+title: BDA PPL
+baseurl: "/bdappl"
+url: "http://mhtess.github.io/bdappl"
 
 # Build settings
 markdown: kramdown

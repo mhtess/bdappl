@@ -2,8 +2,7 @@
 layout: default
 ---
 
-The present course serves an a practical introduction to the Rational Speech Act modeling framework. Little is presupposed beyond a willingness to explore recent progress in formal, implementable models of language understanding.
-
+Introductory text
 
 ## Chapters
 
