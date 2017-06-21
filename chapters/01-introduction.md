@@ -158,4 +158,4 @@ viz.hist(repeat(1000,geometricCoin))
 
 
 
-In the [next chapter](02-pragmatics.html), we'll see how RSA models have been developed to model more complex aspects of pragmatic reasoning and language understanding.
+In the [next chapter](02-bayesRule.html), we'll see how RSA models have been developed to model more complex aspects of pragmatic reasoning and language understanding.
