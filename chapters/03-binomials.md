@@ -13,9 +13,9 @@ var model = function() {
   return {"theta": theta}
 }
 
-var posteriorDist = Infer({method: "rejection", samples: 1000}, model)
+var posteriorDist = Infer({method: "rejection", samples: 1000, model: model})
 
-viz.auto(posteriorDist)
+viz(posteriorDist)
 ~~~~
 
 What does it look like in comparison to the prior?
