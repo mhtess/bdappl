@@ -4,180 +4,76 @@ title: Introducing probabilistic programs
 description: "An introduction to probabilistic programs"
 ---
 
-# Programming Basics
+If you would like a brief refresher on JavaScript basics, go [here](http://probmods.org/chapters/13-appendix-js-basics.html).
 
-WebPPL is a small, functional programming language that looks and feels like JavaScript.
-It is, in fact, a very powerful **probabilistic programming language**
+## Sampling
 
-As in any programing language, you can do basic arithmetical operations
-
-~~~~
-3 + 3
-~~~~
-
-You can create variables and use them
+A [probabilistic programming language (PPL)](https://en.wikipedia.org/wiki/Probabilistic_programming_language) is a programming language specialized for building probabilistic models and *performing inference* in those models. What that means, we'll see in a moment. But first, the core ingredient: *random primitives*.
 
 ~~~~
-var x = 3
-x + 3
+flip(0.6)
 ~~~~
 
-Like in JavaScript, numeric variables can be automatically modified into strings
+`flip` is a function like any other: it takes an argument and returns a value. What makes `flip` special is that it doesn't do the same thing every time you run it.
 
-~~~~
-var x = 3
-x + " is my favorite number"
-~~~~
-
-## Arrays and Objects
-
-Two different kinds of collections of things are arrays (sometimes called lists) and objects.
-Arrays are collections of values.
-
-~~~~
-var myFavoriteNumbers = [1, 2, 3, 4, 5]
-myFavoriteNumbers
-~~~~
-
-You can index in using numbers representing the position. Try: `myFavoriteNumbers[2]`
-
-Objects have properties, and each property (sometimes called a "key") has a value.
-
-~~~~
-var myFavoriteThings = {number: 3, food: "pie"}
-myFavoriteThings
-~~~~
-
-You can index in using the name of the property. Try: `myFavoriteThings["food"]` (same as `myFavoriteThings.food`)
-
-
-
-## Functions
-The most awesome thing about programming is making functions
-
-~~~~
-var f = function(x) { return x + 3 }
-
-var y = f(3)
-y
-~~~~
-
-And the coolest thing is that functions can be arguments of other functions!
-
-~~~~
-var g = function(y) { return y(3) + 2 }
-var f = function(x) { return x + 3 }
-
-~~~~
-
-> **Exercises:**
-
-> 1. Before running any code, calculate `g(f)`. Check your work by running the code.
-> 2. Try to do the same as as `g(f)` without defining `f` explicitly.
-> [Hint: Functions can be arguments of other functions. How do we represent a function?]
-
-`repeat` is a built-in function that takes another function as an argument. it repeats it how many ever times you want
-
-~~~~
-var g = function(){ return 8 }
-repeat(100, g)
-~~~~
-
-> **Exercise:** What will happen if you run `repeat(100, 8)`? Why?
-
-# conditional statements
-
-Another very useful thing in programming is conditional logic.
-
-~~~~
-var smellsGood = function(food){
-  food[0] == "p"
-};
-if (smellsGood("pie")) {
-  display("the world is a good place")
-} else {
-  display("i dont know what to believe")
-}
-~~~~
-
-Javascript has a cryptic shorthand.
-`(if) ? (then) : (else)`
-
-~~~~
-2 == 2 ? "yep" : "naw"
-~~~~
-
-~~~~
-var f = function(x) {
-  var y = x*2
-  return x > 3 ? x : y
-}
-
-print(f(3))
-print(f(4))
-~~~~
-
-> **Exercises:**
-
-> 1. Before running any code, calculate `f(3)`. Check your work by running code.
-> 2. Before running any code, calculate `f(4)`. Check your work by running code.
-
-# Randomness in Programs
-
-A probabilistic programming language is like a regular programming language with "elementary random primitives".
-
-
-~~~~
-flip()
-~~~~
-
-`flip` is a function like any other, so we can pass it to higher order functions like `repeat()`
+Because it is a function (like any other), we can pass it to higher order functions like `repeat()`
 
 ~~~~
 repeat(100, flip)
 ~~~~
 
-WebPPL has its own basic visualization tools that are already outfitted in this website. It has a lot of functionality, whose documentation can be found [here](https://github.com/probmods/webppl-viz). The coolest thing about WebPPL viz is that it will often automatically produce exactly what you want to see, just by calling `viz()`. (It used to be called `viz.magic()`).
+WebPPL has its own basic visualization tools that are already outfitted in this website. It has a lot of functionality, whose documentation can be found [here](https://github.com/probmods/webppl-viz). The coolest thing about WebPPL viz is that it will often automatically produce exactly what you want to see, just by calling `viz()`. (This functionality used to be called `viz.magic()`).
 
 > **Exercises:**
 >
 > 1. Try calling `viz()` on the output of the above code box.
 > 2. Run the code box several times. Does the output surprise you?
 > 3. Try repeating the flip 1000 times, and run the code box several times. What has changed? Why?
+> 4. Try repeating `flip(0.6)`. What needs to change from the original code box?
 
 ## Distributions
 
-So far, we have been looking at *samples* from probability distributions. The probability distribution is thus *implicit* in the sampler function. (If you repeat the sampling many times, you will start to approximate the distribution closer and closer.)
+Above, we looked at *samples* from probability distributions. Using functions that sample, the probability distribution is *implicit* in those sampling functions. For example, if you repeat the sampling many times, you will start to approximate the distribution better and better.
 
-WebPPL can also represent the distribution explicitly. This is done using the capitalized versions of the sampler functions. (Note: `flip()` is a cute way of referring to a sample from the `bernoulli()` distribution.)
+WebPPL has the ability to represent probability distributions *explicitly*. This is done using a capitalized versions of the sampler functions. (Note: `flip()` is a cute way of referring to a sample from the `bernoulli()` distribution.)
 
 ~~~~
-bernoulli(0.5)
+bernoulli(0.6)
 ~~~~
 
 Distributions have parameters. (And different distributions have different parameters.)
 For example, the Bernoulli distribution has a single parameter.
 In WebPPL, it is called `p` and refers to the probability of the coin landing on heads.
+[Click here](http://docs.webppl.org/en/master/distributions.html) for a complete list of distributions and their parameters in WebPPL.
 We can call the distributions by passing them objects with the parameter name(s) as keys and parameter value(s) as values (e.g., `{p: 0.5}`)
 
 ~~~~
 Bernoulli( { p: 0.5 } )
 ~~~~
 
-Try running the above box many times. Does it change? Why not?
+> Exercise: Try running the above box many times. Does it change? Why not?
 
 If a distribution is explicitly constructed, it can be sampled from by calling `sample()` on that distribution.
 
 ~~~~
 var parameters = { p : 0.9 }
-var sweetDist = Bernoulli( parameters )
-sample(sweetDist)
+var myDist = Bernoulli( parameters )
+sample(myDist)
 ~~~~
 
-The Bernoulli is the simplest of all distributions. [WebPPL has many distributions](http://docs.webppl.org/en/master/distributions.html).
+> Exercise: Line by line, describe what is happening in the above code box.
 
-What is happening in the above box?
+The **support** of a distribution is the set of possible values that can be sampled from that distribution. Distributions' supports can be access by calling `.support()` on the distribution.
+The **score** of a value under a distribution is the log-probability of observing that value given that distribution. The score can be access by calling `.score(val)` on the distribution.
 
+~~~~
+// the support of the distribution
+display( Bernoulli( { p : 0.9 } ).support() )
+// the log-probability of true
+display( Bernoulli( { p : 0.9 } ).score(true) )
+~~~~
+
+## Challenge problem
 
 ~~~~
 var geometricCoin = function(){
