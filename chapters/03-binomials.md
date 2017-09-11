@@ -3,7 +3,8 @@ layout: chapter
 title: Analyzing binomial data
 description: "The simplest of data types"
 ---
-## Analyses of binomially distributed data
+
+
 
 ~~~~
 var model = function() {

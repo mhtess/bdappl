@@ -3,7 +3,7 @@
 
 // Github links
 
-var github_repository = "http://github.com/gscontras/probLang/";
+var github_repository = "http://github.com/mhtess/bdappl/";
 
 function markdown_url(page_url) {
     return page_url.slice(0, -4) + "md";
@@ -43,7 +43,7 @@ if (typeof Distribution !== 'undefined') {
 
 // $(function(){
 //   var preEls = Array.prototype.slice.call(document.querySelectorAll("pre"));
-//   preEls.map(function(el) { wpEditor.setup(el, {language: 'webppl'}); });          
+//   preEls.map(function(el) { wpEditor.setup(el, {language: 'webppl'}); });
 // });
 
 
@@ -65,7 +65,7 @@ var textohtml_map = {
   "\\\"{U}": "&Uuml;",
   "\\\"{A}": "&Auml;",
   "\\\"{O}": "&Ouml;",
-  "\\'{E}": "&Eacute;"  
+  "\\'{E}": "&Eacute;"
 };
 
 function textohtml(tex) {
@@ -154,7 +154,7 @@ function format_refp(citation) {
 }
 
 
-$.get("/ESSLLI-2016/bibliography.bib", function (bibtext) {
+$.get("/bdappl/bibliography.bib", function (bibtext) {
     $(function () {
         var bibs = doParse(bibtext);
         $.each(
