@@ -94,7 +94,7 @@ var posteriorDistibution = Infer({
   model: model, method: "rejection", samples: 1000
 })
 
-viz(posteriorDist)
+viz(posteriorDistibution)
 ~~~~
 
 The output of `Infer()` is a distribution object, in the same way as the built-in distributions like `Binomial()`.
