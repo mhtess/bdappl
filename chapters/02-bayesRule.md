@@ -1,10 +1,32 @@
 ---
 layout: chapter
-title: Bayes Rule
-description: "Updating beliefs with data"
+title: Building models
+description: "Describing parameters with probabilities"
 ---
 
 In the last chapter, we sampled from distributions and visualized them.
+We can use distributions to represent *observable outcomes*.
+For example, let's say we run an experiment on children to better understand the conditions under which they will provide help a stranger.
+(We will code "helping the stranger" as a 1 or `true`, or *success*, and "not helping the stranger"  as a 0 or `false`, or *failure*).
+
+We can use distributions to represent the *number of kids who helped* in an experiment where we collected 20 kids worth of it.
+Each kid does the experiment one time, producing either a *helping* (1) or *not helping* (0).
+
+~~~~
+var probabilityOfHelping = 0.5
+var observableResponses= repeat(20, function(){return flip(probabilityOfHelping) })
+display(observableResponses)
+var numberOfHelpfulResponses = sum(observableResponses)
+display(numberOfHelpfulResponses)
+~~~~
+
+In the code box above, we've defined a *generative process* of the data.
+We can represent the data as an array of Boolean responses (`true` or `false`) or the number of `true` (or helpful responses).
+
+We can also see how changing the `probabilityOfHelping` will change the observed `numberOfHelpfulResponses`.
+
+> Exercise: Play around with the above code. Wrap the lines code into a function, and have it return `numberOfHelpfulResponses`. Use `viz(repeat(1000, newFunction))` to visualize the *distribution* on numberOfHelpfulResponses.
+
 As scientists, we can use distributions to represent our uncertainty about latent parameters of interest (e.g., the true effect size of a manipulation in the population).
 Distributions that represent our *state of knowledge before collecting data* are called "prior distributions".
 
