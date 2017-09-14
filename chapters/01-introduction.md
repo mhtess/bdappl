@@ -87,4 +87,4 @@ var geometricCoin = function(){
 > 1. Make a function (`geometricCoin`) that flips a coin (of whatever weight you'd like). If it comes up heads, you call that same function and add 1 to the result. If it comes up tails, you return the number 1.
 > 2. Pass that function to repeat, repeat it many times, and create a picture using `viz()`
 
-In the [next chapter](02-bayesRule.html), we'll see how to use new information (e.g., observations, data) to update uncertainty in probabilistic programs.
+In the [next chapter](02-buildingModels.html), we'll see how to use new information (e.g., observations, data) to update uncertainty in probabilistic programs.
