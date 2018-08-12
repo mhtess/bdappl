@@ -1,8 +1,8 @@
 # Site settings
 
-title: Bayesian Data Analysis using Probabilistic Programs
-baseurl: "/bdappl"
-url: "http://mhtess.github.io/bdappl"
+title: (Bayesian) Data Analysis using Probabilistic Programs
+baseurl: "/dappl"
+url: "http://mhtess.github.io/dappl"
 
 # Build settings
 markdown: kramdown

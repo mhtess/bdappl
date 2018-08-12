@@ -1,5 +1,5 @@
 {
-  "name": "mhtess-bdappl",
+  "name": "mhtess-dappl",
   "version": "0.0.1",
   "description": "",
   "scripts": {
@@ -13,11 +13,11 @@
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "http://github.com/mhtess/bdappl/issues"
+    "url": "http://github.com/mhtess/dappl/issues"
   },
-  "homepage": "http://mhtess.github.io/bdappl",
+  "homepage": "http://mhtess.github.io/dappl",
   "dependencies": {
-    "webppl": "^0.9.7",
+    "webppl": "^0.9.11",
     "webppl-timeit": "^0.3.0",
     "webppl-viz": "github:probmods/webppl-viz",
     "wp-editor": "github:probmods/webppl-editor"
