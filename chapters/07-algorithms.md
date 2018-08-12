@@ -8,9 +8,7 @@ custom_js:
 
 #### Flow chart for determining your best inference algorithm
 
-<img src="/bdappl2018/assets/img/inferFlowChart.png" alt="drawing" width="500px"/>
-
-<!-- ![img](/bdappl2018/assets/img/inferFlowChart.png) -->
+<img src="/bdappl/assets/img/inferFlowChart.png" alt="drawing" width="500px"/>
 
 ### [Enumeration](https://webppl.readthedocs.io/en/master/inference/methods.html#enumeration)
 
