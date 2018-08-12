@@ -128,3 +128,14 @@ footer {
 footer a {
     color: #bbb
 }
+
+blockquote {
+    position:relative;
+    margin: 30px auto 5px auto;
+    padding: 10px;
+/*  background: url(schatten.png) no-repeat bottom right !important;
+    background: url(schatten.gif) no-repeat bottom right;*/
+    border: 2px #616c7a solid;
+    background-color: #b7cae5;
+}
+

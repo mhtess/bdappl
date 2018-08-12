@@ -38,7 +38,10 @@ Thus, many Bayesian tutorials begin with parameter learning before moving onto h
 
 
 $$
-P(\text{hypothesis} \mid \text{data}) = \frac{P(\text{data} \mid \text{hypothesis}) \times P(\text{hypothesis})}{P(\text{data})} = \frac{P(d \mid h) \times P(h)}{\int_{h} P(d \mid h)\times P(h)}
+P(\text{hypothesis} \mid \text{data}) = \frac{P(\text{data} \mid \text{hypothesis}) \times P(\text{hypothesis})}{P(\text{data})} $$
+
+$$
+= \frac{P(d \mid h) \times P(h)}{\int_{h} P(d \mid h)\times P(h)}
 $$
  
 
