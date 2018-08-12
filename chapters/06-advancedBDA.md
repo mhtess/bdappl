@@ -521,5 +521,5 @@ var kdeSamples =  repeat(10000, function(){ sample(kdeDist)})
 display(credibleInterval(kdeSamples, 0.95))
 ~~~~
 
-In the [next chapter](6-algorithms.html), we'll discuss different inference algorithms and when you might want to use them.
+In the [next chapter](07-algorithms.html), we'll discuss different inference algorithms and when you might want to use them.
 

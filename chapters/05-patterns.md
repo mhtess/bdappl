@@ -147,3 +147,6 @@ var b_is_false = Infer({method: "rejection", samples:1000},
 print("We observe c and that b is not true")
 viz.auto(b_is_false)
 ~~~~
+
+In the [next chapter](06-advancedBDA.html), we'll show how you can elaborate your models to better represent your data (under development).
+

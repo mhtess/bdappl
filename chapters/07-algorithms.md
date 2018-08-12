@@ -112,4 +112,4 @@ viz(posterior)
 - [Variational inference / Optimization](https://webppl.readthedocs.io/en/master/inference/methods.html#optimization)
 - [Sequential Monte Carlo (SMC) / Particle Filter](https://webppl.readthedocs.io/en/master/inference/methods.html#smc)
 
-In the [next chapter](7-bda-bcm.html), we will look at an example of doing Bayesian data analysis over a Bayesian cognitive model.
+In the [next chapter](08-bda-bcm.html), we will look at an example of doing Bayesian data analysis over a Bayesian cognitive model.

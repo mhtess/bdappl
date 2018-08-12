@@ -112,7 +112,7 @@ There are many other probabilistic languages. A new language that tries to bring
 > Dive into the deep end with a Bayesian data analysis of a Bayesian cognitive model of the "Spinning coins" problem [here](https://probmods.org/chapters/14-bayesian-data-analysis.html).
 
 
-In the [next chapter](2-introPPL.html), we will dig into the basics of probabilistic programming.
+In the [next chapter](02-introPPL.html), we will dig into the basics of probabilistic programming.
 
 
 

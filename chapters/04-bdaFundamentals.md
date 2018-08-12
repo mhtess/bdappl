@@ -9,49 +9,6 @@ Much of this material is taken from the [BDA Chapter](https://probmods.org/chapt
 
 Let us first rewrite our simple Bayesian data analysis model from the previous chapter, using the language of `Infer()` and `observe()`. 
 
-~~~~
-// observed data
-var k = 15 // number of children who help
-var n = 20  // total number of children
-
-var model = function() {
-
-   // propensity to help, or true population proportion who would help
-   var p = uniform(0, 1);
-
-   // Observed k children who help
-   // Assuming each child's response is independent of each other
-   observe(Binomial({p : p, n: n}), k);
-
-   // predict what the next n will do
-   var posteriorPredictive = binomial(p, n);
-
-   // duplicate model structure and parameters, without observe
-   var prior_p = uniform(0, 1);
-   var priorPredictive = binomial(prior_p, n);
-
-   return {
-       prior: prior_p, priorPredictive : priorPredictive,
-       posterior : p, posteriorPredictive : posteriorPredictive
-    };
-}
-
-var opts = {model: model, method: "rejection", samples: 2000};
-var posterior = Infer(opts);
-
-viz.marginals(posterior)
-~~~~
-
-The posterior distribution depends upon: (i) the prior distribution, (ii) the assumed generative process of the data, and (iii) the observed data. 
-(ii & iii are sometimes referred to collectively as the "likelihood of the observed data").
-
-**Exercises:**
-
-1. Try to interpret each plot, and how they relate to each other. Why are some plots densities and others bar graphs? Understanding these ideas is a key to understanding Bayesian analysis. Check your understanding by trying other data sets, varying both `k` and `n`.
-
-2. Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
-
-3. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
 
 
 ## Posterior prediction and model checking
@@ -315,4 +272,4 @@ print( savageDickeyRatio )
 For more information about different methods of calculating Bayes Factors, see [this helpful blogpost](http://michael-franke.github.io/statistics,/modeling/2017/07/07/BF_computation.html).
 
 We have now gone through the fundamentals of Bayesian Data Analysis.
-In the [next chapter](5-advancedBDA.html), we'll show how you can elaborate your models to better represent your data.
+In the [next chapter](05-patterns.html), we'll show you basic techniques for modeling causality among random variables. 

@@ -153,5 +153,5 @@ var geometricCoin = function(){
 1. Make a function (`geometricCoin`) that flips a coin (of whatever weight you'd like). If it comes up heads, you call that same function (`geometricCoin`) and add 1 to the result. If it comes up tails, you return the number 1.
 2. Pass that function to repeat, repeat it many times, and create a picture using `viz()`
 
-In the [next chapter](3-simpleModels.html), we'll start to compose generative models of data, and use observations (e.g., data we've collected in an experiment) to learn about the models we've created.
+In the [next chapter](03-simpleModels.html), we'll start to compose generative models of data, and use observations (e.g., data we've collected in an experiment) to learn about the models we've created.
 
