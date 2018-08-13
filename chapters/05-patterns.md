@@ -1,6 +1,6 @@
 ---
 layout: chapter
-title: Patterns of inference
+title: Causal models
 description: "Reasoning with structured knowledge"
 ---
 

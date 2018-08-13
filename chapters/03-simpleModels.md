@@ -1,7 +1,7 @@
 ---
 layout: chapter
-title: Building models
-description: "Describing the generative process of data"
+title: Learning about a hypothesis
+description: "Models formalize hypotheses"
 ---
 
 In the last chapter, we played around with the basic building blocks of probabilistic programs: sampling from and explicitly representing probability distributions.
@@ -16,8 +16,8 @@ But that is not our usual situation: We collect experimental data in order to le
 ## A simple generative process
 
 Imagine we are investigating the **origins of prosocial behavior**:
-Some believe humans are born with a self-interested tendency and only acquire prosociality through instruction (perhaps mediated by language).
-thers believe altruism in innate; as soon as children are physically and cognitively able to help, they will.
+Some scientists believe humans are born with a self-interested tendency and only acquire prosociality through instruction (perhaps mediated by language).
+Others believe altruism in innate; as soon as children are physically and cognitively able to help, they will.
 To investigate this, we are going to put pre-verbal infants in a context where a person is struggling to complete their goal (e.g., as in [this classic study](https://www.youtube.com/watch?v=kfGAen6QiUE)).
 
 We plan to conduct this experiment on 20 infants. 
@@ -250,42 +250,64 @@ var PosteriorPredictiveDistribution = Infer({model})
 viz(PosteriorPredictiveDistribution)
 ~~~~
 
+You can think about the posterior predictive in a sequential manner. 
+First, perform Bayesian inference to learn about the parameter of interest.
+Then, using the posterior distribution over the parameter, sample according to the generative model of the data.
+This gives you a posterior predictive distribution in "data space"; what we would expect should we run the experiment again.
 
-### Understanding the full model
+Using WebPPL, we can see this sequential manner:
+
+~~~~
+var model = function(){
+  var propensity_to_help = uniform(0, 1)
+  observe(Binomial({n: 20, p: propensity_to_help}), 15)
+  return propensity_to_help
+}
+
+var PosteriorParameterDistribution = Infer({model})
+
+var posteriorPredictiveSamples = repeat(10000, function(){ 
+  var propensity_to_help = sample(PosteriorParameterDistribution)
+  return binomial({n: 20, p: propensity_to_help})
+})
+~~~~
 
 
-#### The 4 Ps: Priors, posteriors, parameters, predictives
+### The 4 Ps: Priors, posteriors, parameters, predictives
 
+So far, we have seen priors and posteriors, parameters and predictives.
+It can be helful to see the 4 Ps in the same model, and to examine each distribution at the same time.
 
 ~~~~
 // observed data
 var k = 15 // number of children who help
 var n = 20  // total number of children
 
+var PriorDistribution = Uniform({a: 0, b: 1});
+
 var model = function() {
 
    // propensity to help, or true population proportion who would help
-   var p = uniform(0, 1);
+   var propensity_to_help = sample(PriorDistribution);
 
    // Observed k children who help
    // Assuming each child's response is independent of each other
-   observe(Binomial({p : p, n: n}), k);
+   observe(Binomial({p : propensity_to_help, n: n}), k);
 
    // predict what the next n will do
-   var posteriorPredictive = binomial(p, n);
+   var posteriorPredictive = binomial(propensity_to_help, n);
 
-   // duplicate model structure and parameters, without observe
-   var prior_p = uniform(0, 1);
-   var priorPredictive = binomial(prior_p, n);
+   // duplicate model structure and parameters but omit observe
+   var prior_propensity_to_help = sample(PriorDistribution);
+   var priorPredictive = binomial(prior_propensity_to_help, n);
 
    return {
-       prior: prior_p, priorPredictive : priorPredictive,
-       posterior : p, posteriorPredictive : posteriorPredictive
+       prior: prior_propensity_to_help, priorPredictive : priorPredictive,
+       posterior : propensity_to_help, posteriorPredictive : posteriorPredictive
     };
 }
 
-var opts = {model: model, method: "rejection", samples: 2000};
-var posterior = Infer(opts);
+var posterior = Infer({model});
 
 viz.marginals(posterior)
 ~~~~
@@ -297,97 +319,127 @@ The posterior distribution depends upon: (i) the prior distribution, (ii) the as
 
 1. Try to interpret each plot, and how they relate to each other. Why are some plots densities and others bar graphs? Understanding these ideas is a key to understanding Bayesian analysis. Check your understanding by trying other data sets, varying both `k` and `n`.
 
-2. Try different priors on `p`, by changing `p = uniform(0, 1)` to `p = beta(10,10)`, `beta(1,5)` and `beta(0.1,0.1)`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions.
+2. Try different priors on `propensity_to_help`, by changing `PriorDistribution`. to `Beta({a: 10, b: 10})`, `Beta({a: 1, b: 5})` and `Beta({a: 0.1, b: 0.1})`. Use the figures produced to understand the assumptions these priors capture, and how they interact with the same data to produce posterior inferences and predictions. (If the parameter distributions aren't beautifully smooth, don't fret. Later we will see how to get better approximations for these distributions.)
 
 3. Predictive distributions are not restricted to exactly the same experiment as the observed data, and can be used in the context of any experiment where the inferred model parameters make predictions. In the current simple binomial setting, for example, predictive distributions could be found by an experiment that is different because it has `n' != n` observations. Change the model to implement an example of this.
 
 
+## Posterior prediction and model checking
 
+The posterior predictive distribution describes what data you should expect to see, given the model you've assumed and the data you've collected so far.
+If the model is a good description of the data you've collected, then the model shouldn't be surprised if you got the same data by running the experiment again.
+That is, the most likely data for your model after observing your data should be the data you observed.
 
+It's natural then to use the posterior predictive distribution to examine the descriptive adequacy of a model.
+If these predictions do not match the data *already seen* (i.e., the data used to arrive at the posterior distribution over parameters), the model is descriptively inadequate.
 
+Imagine you are piloting your task.
+You have two research assistants that you send to two different research sites to collect data.
+You got your first batch of data back today: For one of your research assistants, 10 out of 10 children tested performed the helping behavior. 
+For the other research assitant, 0 out of 10 children tested helped.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Abstracting away from the algorithm: `Infer`
-
+We'll use the `editor.put()` function to save our results so we can look at the them in different code boxes.
 
 ~~~~
-var priorDistribution = Uniform({a:0, b:1});
-var numberOfKidsTested = 20;
-var model = function() {
-  var propensityToHelp = sample(priorDistribution)
-  var numberOfHelpfulResponses = binomial({
-    p: propensityToHelp,
-    n: numberOfKidsTested
-  })
-  condition(numberOfHelpfulResponses == 15) // condition on data
-  return { propensityToHelp }
-}
+// "Kids who help" in 2 experiments
+var k1 = 0;
+var k2 = 10;
 
-var inferArgument = {
-  model: model, 
-  method: "rejection", 
-  samples: 5000
-}
-
-var posteriorDistibution = Infer(inferArgument)
-
-viz(posteriorDistibution)
-~~~~
-
-
-Intuitively, `condition()` here operates the same as the conditional return statement in the code box above this one. 
-It takes in a boolean value, and throws out the random choices for which that boolean is `false`. 
-Speaking more generally and technically, `condition()` *re-weights* the probabilities of the *program execution* (which includes all of the *random choices* that have been made up to that point in the program) in a binary way: If it's true, the probability of that program execution gets multiplied by 1 (which has no effect) and if the condition statement is false, the probability of that program execution gets multiplied by 0 (which completely destroys that program execution).
-
-`condition()` is a special case of `factor()`, which directly (and continuously) re-weights the (log) probability of the program execution. 
-Whereas `condition()` can only take `true` or `false` as arguments, `factor()` takes a number. 
-The code above can be rewritten using factor in the following way:
-
-
-~~~~
-var priorDistribution = Uniform({a:0, b:1});
+// Number of kids in 2 experiments
+var n1 = 10;
+var n2 = 10;
 
 var model = function() {
-  var propensityToHelp = sample(priorDistribution)
-  // reweight based on log-prob of observing 15
-  factor(Binomial( {n:20, p: propensityToHelp} ).score(15))
-  return { propensityToHelp }
+
+  // "true effect in the population"
+  var p = uniform(0, 1);
+
+  // observed data from 2 experiments
+  observe(Binomial({p: p, n: n1}), k1);
+  observe(Binomial({p: p, n: n2}), k2);
+
+  // posterior prediction
+  var posteriorPredictive1 = binomial(p, n1)
+  var posteriorPredictive2 = binomial(p, n2)
+
+  return {
+    parameter : p,
+    predictive: {
+      predictive1: posteriorPredictive1,
+      predictive2: posteriorPredictive2
+    }
+  };
 }
 
-var posterior = Infer({model: model, method: "rejection", samples: 1000})
-viz(posterior)
+var opts = {
+  model: model,
+  method: "MCMC", callbacks: [editor.MCMCProgress()],
+  samples: 20000, burn: 10000
+};
+
+var posterior = Infer(opts);
+
+var posteriorPredictive = marginalize(posterior, "predictive")
+// save results for future code boxes
+editor.put("posteriorPredictive", posteriorPredictive)
+
+var parameterPosterior = marginalize(posterior, "parameter")
+viz.density(parameterPosterior, {bounds: [0, 1]})
 ~~~~
 
-Re-weighting the log-probabilities of a program execution by the (log) probability of a value under a given distribution, as is shown in the code box above, is true Bayesian updating. Because this updating procedure is so commonly used, it gets its own helper function: `observe()`.
+Looks like a reasonable posterior distribution.
+
+How does the posterior predictive look?
 
 ~~~~
-var model = function() {
-  var propensityToHelp = uniform(0,1) // priors
-  observe(Binomial( {n:20, p: propensityToHelp} ), 15) // observe 15 from the Binomial dist
-  return { propensityToHelp }
-}
-
-var posterior = Infer({model: model, method: "rejection", samples: 1000})
-viz(posterior)
+var posteriorPredictive = editor.get("posteriorPredictive")
+viz(posteriorPredictive)
 ~~~~
 
+This plot is a heat map because our posterior predictive distributions is over two dimensions (i.e., future data points collected by experimenter 1 and experimenter 2).
+The intensity of the color represents the probability.
+
+How well does it recreate the observed data?
+Where in this 2-d grid would our observed data land?
+
+Another way of visualizing the model-data fit is to examine a scatterplot.
+Here, we will plot the "Maximum A-Posteriori" value as a point-estimate of the posterior predictive distribution.
+If the data is well predicted by the posterior predictive (i.e., the model is able to accommodate the data well), it would fall along the y = x line.
+
+~~~~
+var k1 = 0, k2 = 10;
+var posteriorPredictive = editor.get("posteriorPredictive")
+var posteriorPredictiveMAP = posteriorPredictive.MAP().val
+viz.scatter(
+  [
+   {model: posteriorPredictiveMAP.predictive1, data: k1},
+   {model: posteriorPredictiveMAP.predictive2, data: k2}
+  ]
+)
+~~~~
+
+How well does the posterior predictive match the data?
+What can you conclude about the parameter `p`?
+
+In the [next chapter](04-hypothesisTesting.html), we'll see how to compare multiple hypotheses.
+
+<!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
+ -->
+<!--
+### Exercises 2
+
+1.  What do you conclude about the descriptive adequacy of the model, based on the relationship between the observed data and the posterior predictive distribution? Recall the observed data is `k1 = 0; n1 = 10` and  `k2 = 10; n2 = 10`.
+
+2. What can you conclude about the parameter `theta`?
+-->
+
+<!--
+Basics from [PPAML school](http://probmods.github.io/ppaml2016/chapters/5-data.html)
+-->
 
 
 
-
+<!-- 
 We can build a probabilistic program to represent a scientific, generative model that can simulate different possible outcomes of our experiment.
 (Later, we will use the actual outcome of the experiment to learn about a parameter of this model.)
 For our purposes, a generative model is simply one that provides a mapping from latent, unobservable constructs to observable data.
@@ -430,182 +482,6 @@ viz.hist(observableResponses)
 
 We will see more of this kind of elaboration of models in [Chapter 5](5-advancedBDA.html).
 
-#### Prior distributions over parameters and data
+ -->
 
 
-Recall that distributions provide both a set of possible values of a variable and their associated probabilities. 
-So we can break the problem down into articulating the set of possible values and then the probabilities of each of the values. 
-
-1. **Possible values the parameter could take on**: This is dictated by the role of the parameter in the model.
-For example, in abstract terms, `propensityToHelp` is the weight of a coin, and thus must be a number between 0 and 1. (It would not make sense, in the generative model we've described so far, for `propensityToHelp` to be a negative number, or greater than 1.)
-
-2. **Probabilities of all of the possible values of the parameter**: This is much less obvious, but a good starting point is to consider all of the possible values equally probable. That is, we might be completely ignorant as to what the parameter should be (or, we might imagine a host of skeptical reviewers, some of whom think the parameter ought to be high, others who think the parameter ought to be low, and so we intuitively average across all of these potential skeptics). Your understanding of the prior probabilities of the parameter values will grow as you internalize the model more and as we explore the implications of different prior distributions for the results.
-
-So for `propensityToHelp`, a relatively uncontroversial assumption would be that it could be any number between 0 and 1, with all numbers equally likely.
-Now that we've made explicit our prior beliefs, we need to find a probability distribution that has these features (if one does not exist, we will need to construct one).
-Fortunately, one does exist! 
-The [Beta distribution](http://docs.webppl.org/en/master/distributions.html#Beta) is a distribution over the numbers between 0 and 1. 
-The Beta distribution has two parameters (denoted in WebPPL as `a` and `b`). 
-As can be gleaned from the [Wikipedia article](https://en.wikipedia.org/wiki/Beta_distribution), the parameters that correspond to equal probability for all values between 0 and 1 are `a=1` and `b=1`. 
-So our prior distribution is the `Beta({a: 1, b:1})`.
-
-
-Because assigning equal probabilities to all possible values of a distribution is a very common practice, this state of knowledge can also be described with another family of distributions: The Uniform distribution. The Uniform distribution has two parameters as well (also denoted in WebPPL as `a` and `b`). These parameters are the lower and upper bounds of the range of values. And so, the `Beta({a: 1, b:1})` is equal to `Uniform({a: 0, b:1})`.
-
-~~~~
-var PriorDistribution = Uniform({a:0, b:1})
-
-var samplePrior = function(){
-  var propensityToHelp = sample(PriorDistribution)
-  return {propensityToHelp}
-}
-
-viz(repeat(10000, samplePrior))
-~~~~
-
-The `Uniform` distribution (bounded between 0 and 1) represents our *a priori* state of knowledge about `propensityToHelp`.
-Specifying what we believe *a priori* is the first step towards determining what we should believe *a posteriori*, or after we observe the data.
-
-We can combine this prior distribution over the parameter with our generative process of the data, which we wrote down above.
-Composing these together will produce a prior distribution over observed data.
-Distributions over observed data are called **predictive distributions** and so this is the *prior predictive distribution*.
-The support of this distribution (i.e., the values over which this distribution is defined) are the possible outcomes of the experiment, whereas the **parameter distribution** above is defined over the values of the latent parameter.
-
-~~~~
-var PriorDistribution = Uniform({a:0, b:1});
-var numberOfKidsTested = 20;
-var samplePriorPredictive = function(){
-  var propensityToHelp = sample(PriorDistribution)
-  var numberOfHelpfulResponses = binomial({
-    p: propensityToHelp,
-    n: numberOfKidsTested
-  })
-  return {numberOfHelpfulResponses}
-}
-
-viz(repeat(10000, samplePriorPredictive))
-~~~~
-
-
-#### Learning about parameters from data
-
-Having specified our *a priori* state of knowledge about the parameter of interest, and the generative process of the data given a particular value of the parameter, we are ready to make inferences about the likely value of the parameter given our observed data.
-We do this via *Bayesian inference*, the mathematically correct way of reasoning about the underlying probability that generated our data.
-
-So we run the experiment, and 15 out of 20 kids performed the helping behavior.
-Thus, `numberOfHelpfulResponses == 15`.
-How can we tell our model about this?
-
-~~~~ norun
-var sampleAndObserve = function(){
-  var propensityToHelp = sample(PriorDistribution)
-  var numberOfHelpfulResponses = binomial({
-    p: propensityToHelp,
-    n: numberOfKidsTested
-  })
-  var matchesOurData = (numberOfHelpfulResponses == 15)
-  return ...
-}
-~~~~
-
-What should we return?
-We could return `matchesOurData`.
-If we repeat this function many times, we will estimate how many `propensityToHelp`s under our prior (i.e., between 0 - 1) give rise to our observed data.
-This is called the **likelihood of the data**, but is not immediately interpretable in isolation (though we will see it later in this course).
-
-What if we returned `propensityToHelp`?
-Well, that will just give us the same prior that we saw above, because there is no relationship in the program between `matchesOurData` and `propensityToHelp`.
-
-What if we returned `propensityToHelp`, but only if `matchesOurData` is `true`?
-In principle, any value `propensityToHelp` *could* give rise to our data, but intuitively some values are more likely to than others (e.g., a `propensityToHelp` = 0.2, would produce 15 out of 20 successes with probability proportional to $$0.2^{15} + 0.8^5$$, which is not as likely as a `propensityToHelp` = 0.8 would have in producing 15 out of 20 success).
-
-It turns out, if you repeat that procedure many times, then the values that survive this "rejection" procedure, survive it in proportion to the actual *a posteriori* probability of those values given the observed data. 
-It is a mathematical manifestation of the quotation from Arthur Conan Doyle's *Sherlock Holmes*: "Once you eliminate the impossible, whatever remains, no matter how improbable, must be the truth."
-Thus, we eliminate the impossible (and, implicitly, we penalize the improbable), and what we are left with is a distribution that reflects our state of knowledge after having observed the data we collected.
-
-
-We'll use the `editor.put()` function to save our results so we can look at the them in different code boxes.
-
-~~~~
-var PriorDistribution = Uniform({a:0, b:1});
-var numberOfKidsTested = 20;
-
-var sampleAndObserve = function(){
-  var propensityToHelp = sample(PriorDistribution)
-  var numberOfHelpfulResponses = binomial({
-    p: propensityToHelp,
-    n: numberOfKidsTested
-  })
-  var matchesOurData = (numberOfHelpfulResponses == 15)
-  return matchesOurData ? propensityToHelp : "reject"
-}
-
-var exampleOutput = repeat(10, sampleAndObserve)
-
-display("___example output from function___")
-display(exampleOutput)
-
-// remove all the rejects
-var posteriorSamples = filter(
-  function(s){return s != "reject" },
-  repeat(100000, sampleAndObserve)
-)
-
-// save results in browser cache to access them later
-editor.put("posteriorSamples", posteriorSamples)
-
-viz(posteriorSamples)
-~~~~
-
-Visualized from the code box above is the *posterior distribution* over the parameter `propensityToHelp`.
-It represents our state of knowledge about the parameter after having observed the data (15 out of 20 success).
-
-#### The inference algorithm
-
-The procedure we implemented in the above code box is called [Rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling), and it is the simplest algorithm for [Bayesian inference](https://en.wikipedia.org/wiki/Bayesian_inference).
-
-The algorithm can be written as:
-
-1. Sample a parameter value from the prior (e.g., `p = uniform(0,1)`)
-2. Make a prediction (i.e., generate a possible observed data), given that parameter value (e.g., `binomial( {n:20, p: p} )`)
-+ If the prediction generates the observed data, record parameter value.
-+ If the prediction doesn't generate the observed data, throw away that parameter value.
-3. Repeat many times.
-
-Just as we saw in the previous chapter, our ability to represent this distribution depends upon the number of samples we take.
-Above, we have chosen to take 100000 samples in order to more accurately represent the posterior distribution.
-The number of samples doesn't correspond to anything about our scientific question; it is a feature of the *inference algorithm*, not of our model.
-We will describe inference algorithms in more detail in a later chapter.
-
-
-#### Observe, condition, and factor: distilled
-
-The helper functions `condition()`, `observe()`, and `factor()` all have the same underlying purpose: Changing the probability of different program executions. For Bayesian data analysis, we want to do this in a way that computes the posterior distribution. 
-
-Imagine running a model function a single time. 
-In some lines of the model code, the program makes *random choices* (e.g., flipping a coin and it landing on heads, or tails).
-The collection of all the random choices in an execution of every line of a program is referred to as the program execution.
-
-Different random choices may have different (prior) probabilities (or perhaps, you have uninformed priors on all of the parameters, and then they each have equal probability).
-What `observe`, `condition`, and `factor` do is change the probabilities of these different random choices. 
-For Bayesian data analysis, we use these terms to change the probabilities of these random choices to align with the true posterior probabilities. 
-For BDA, this is usually achived using `observe`.
-
-`factor` is the most primitive of the three, and `observe` and `condition` are both special cases of `factor`. 
-`factor` directly re-weights the log-probability of program executions, and it takes in a single numerical argument (how much to re-weight the log-probabilities). 
-`observe` is a special case where you want to re-weight the probabilities by the probability of the observed data under some distribution. `observe` thus takes in two arguments: a distribution and an observed data point.
-
-`condition` is a special case where you want to completely reject or rule out certain program executions.
-`condition` takes in a single *boolean* argum
-
-Here is a summary of the three statements.
-
-~~~~ norun
-// DOES NOT RUN
-factor(val)
-observe(Dist, val) === factor(Dist.score(val)) === condition(sample(Dist) == val)
-condition(bool) === factor(bool ? 0 : -Infinity)
-~~~~
-
-
-In the [next chapter](04-bdaFundamentals.html), we'll go through the fundmantals of Bayesian analysis.
