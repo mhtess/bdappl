@@ -421,6 +421,106 @@ viz.scatter(
 How well does the posterior predictive match the data?
 What can you conclude about the parameter `p`?
 
+
+## Inferences with Gaussians
+
+[Note: These exercises are taken from reft:LW2014 Ch. 4.]
+
+
+First, we want to infer the mean and standard deviation of a gaussian given some data. We set the prior over the mean to a Gaussian centered at 0, but with very large variance. We set the prior over the standard deviation to a uniform distribution over the interval [0,10].
+
+~~~~
+var data =  [1.1, 1.9, 2.3, 1.8];
+
+var model = function(){
+  var mu = gaussian({mu: 0, sigma: 30});
+  var sigma = uniform({a:0, b:10});
+
+  map(function(d){
+    observe(Gaussian({mu: mu, sigma: sigma}), d)
+  }, data)
+
+
+  return {mu, sigma}
+}
+
+var Posterior = Infer({model, method: "MCMC", samples: 5000, burn: 2500})
+
+viz.marginals(Posterior)
+~~~~
+
+**Exercise**: Try a few data sets, varying what you expect the mean and standard deviation to be, and how many data points you observe. 
+
+Some suggestions:
+
+1. Gaussian generated data (HINT: use `var data = repeat(4, function(){gaussian(5, 2)})` for 4 data points with underlying mu = 5  and sigma = 2)
+2. a longer list of data (e.g., length 10 instead of length 4)
+3. uniformly generated data
+
+**Exercise**: Above we plotted the [marginal distributions](https://en.wikipedia.org/wiki/Marginal_distribution), which provides probabilities to values of a variable without regard to other variables. Try plotting the [joint distribution](https://en.wikipedia.org/wiki/Joint_probability_distribution) by simply calling `viz()` on the posterior.  Interpret the shape of the joint posterior.
+
+
+
+
+### The seven scientists
+
+Seven scientists with wildly-differing experimental skills all make a measurement of the same quantity. They get the answers x = {−27.020, 3.570, 8.191, 9.898, 9.603, 9.945, 10.056}. Intuitively, it seems clear that the first two scientists are pretty inept measurers, and that the true value of the quantity is probably just a bit below 10. The main problem is to find the posterior distribution over the measured quantity, telling us what we can infer from the measurement. A secondary problem is to infer something about the measurement skills of the seven scientists.
+
+~~~~
+var data = [-27.020, 3.570, 8.191, 9.898, 9.603, 9.945, 10.056]
+
+var model = function() {
+
+  var mu = gaussian(0, 30);
+  var sigmas = repeat(7, function(){ uniform(0, 20) });
+
+  mapIndexed(function(i, d){
+    observe(Gaussian({mu, sigma: sigmas[i]}), d)
+  }, data)
+
+  return sigmas.concat(mu)
+}
+
+viz.marginals(Infer({model, method: "MCMC", samples: 10000}))
+~~~~
+
+### Repeated measures of IQ
+
+The data are the measures $$x_{ij}$$ for the $$i = 1, . . . ,n$$ people and their $$j = 1, . . . ,m$$ repeated test scores.
+
+We assume that the differences in repeated test scores are distributed as Gaussian error terms with zero mean and unknown precision. The mean of the Gaussian of a person’s test scores corresponds to their latent true IQ. This will be different for each person. The standard deviation of the Gaussians corresponds to the accuracy of the testing instruments in measuring the one underlying IQ value. We assume this is the same for every person, since it is conceived as a property of the tests themselves.
+
+
+~~~~
+var data = {
+  p1: [90, 95, 100],
+  p2: [105, 110, 115],
+  p3: [150, 155, 160]
+}
+
+var model = function() {
+  // everyone shares same sigma (corresponding to measurement error)
+  var sigma = uniform(0, 50)
+
+  // each person has a separate latent IQ
+  var mus = mapObject(function(key, val){
+    return uniform(0, 200)
+  }, data)
+
+  mapObject(function(key, vals){
+    map(function(d){
+      observe(Gaussian({mu: mus[key], sigma: sigma}), d)
+    }, vals)
+  }, data)
+
+  return extend(mus,{sigma})
+
+}
+
+viz.marginals(Infer({model, method: "MCMC", samples: 10000}))
+~~~~
+
+
 In the [next chapter](04-hypothesisTesting.html), we'll see how to compare multiple hypotheses.
 
 <!-- **TODO: This doesn't yet quite make the point about what a model check is. Show example of typical posterior predictive scatter plot?**
