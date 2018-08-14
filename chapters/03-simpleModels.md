@@ -170,6 +170,10 @@ var model = function(){
 }
 
 var PosteriorDistribution = Infer({model})
+
+// save results in browser cache to access them in later codeboxes
+editor.put("PosteriorDistribution", PosteriorDistribution)
+
 viz(PosteriorDistribution)
 ~~~~
 
@@ -209,6 +213,12 @@ The code chunk below calls out to an external JavaScript library called "Lodash"
 )
 
 ~~~~
+///fold:
+var getSamples = function(Dist, key){
+  return _.map(_.map(PosteriorDistribution.samples, "value"), key)
+}
+///
+
 var credibleInterval = function(mySamples, credMass){
   var sortedPts = sort(mySamples)
   var ciIdxInc = Math.ceil(credMass*sortedPts.length)
@@ -223,8 +233,9 @@ var credibleInterval = function(mySamples, credMass){
   return [sortedPts[i], sortedPts[i+ciIdxInc]]
 }
 
+var PosteriorDistribution = editor.get("PosteriorDistribution")
 
-var posteriorSamples = editor.get("posteriorSamples")
+var posteriorSamples = getSamples(PosteriorDistribution, "propensity_to_help")
 
 credibleInterval(posteriorSamples, 0.95)
 ~~~~
@@ -264,12 +275,15 @@ var model = function(){
   return propensity_to_help
 }
 
-var PosteriorParameterDistribution = Infer({model})
+var PosteriorParameterDistribution = Infer({model, method: "rejection",
+                                           samples: 1000})
 
 var posteriorPredictiveSamples = repeat(10000, function(){ 
   var propensity_to_help = sample(PosteriorParameterDistribution)
   return binomial({n: 20, p: propensity_to_help})
 })
+
+viz(posteriorPredictiveSamples)
 ~~~~
 
 
@@ -481,7 +495,8 @@ var model = function() {
   return sigmas.concat(mu)
 }
 
-viz.marginals(Infer({model, method: "MCMC", samples: 10000}))
+viz.marginals(Infer({model, method: "MCMC", samples: 10000,
+                     callbacks: [editor.MCMCProgress()]}))
 ~~~~
 
 ### Repeated measures of IQ
