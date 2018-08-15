@@ -215,29 +215,32 @@ One good technique is called [Annealed Importance Sampling](https://arxiv.org/ab
 ~~~~
 var k = 7, n = 20;
 
-var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
+var complexModel = function(){
+  var p = uniform(0, 1);
+  observe(Binomial({p, n}), k)
+}
 
-var complexModel = Infer({
-  model: function(){
-    var p = uniform(0, 1);
-    return binomial(p, n)
-  }, 
-  method: "forward", samples: 10000
-})
+var simpleModel = function(){
+  observe(Binomial({p: 0.5 , n}), k)
+}
 
-var complexLikelihood = Math.exp(complexModel.score(k))
+// increasing steps decreases the variance in the estimate
+// samples is the number of repetitions of the procedure (result is averaging over samples)
+var log_likelihood_m1 = AIS(complexModel, {steps: 10000, samples: 5})
 
-var bayesFactor_01 = simpleLikelihood / complexLikelihood
-bayesFactor_01
+// overkill: can just compute this via Binomial.score(k)
+var log_likelihood_m0 = AIS(simpleModel)
+
+var log_bf_01 = log_likelihood_m0 - log_likelihood_m1
+Math.exp(log_bf_01) // BF_01
 ~~~~
-
 
 
 ## Savage-Dickey method
 
-For this example, the Bayes factor can be obtained by integrating out the model parameter (using `Infer` with `{method: "forward"}`).
-However, it is not always easy to get good estimates of the two marginal probabilities.
-It turns out, the Bayes factor can also be obtained by considering *only* the more complex hypothesis ($$\mathcal{H}_1$$).
+Above, we obatined the Bayes factor by integrating out the model parameter (by way of various methods).
+As we have said, it is not always easy to get good estimates of the two marginal likelihoods.
+It turns out, the Bayes factor can also be obtained by considering *only* the more complex hypothesis ($$\mathcal{M}_1$$).
 What you do is look at the distribution over the parameter of interest (here, $$p$$) at the point of interest (here, $$p = 0.5$$).
 Dividing the probability density of the posterior by the density of the prior (of the parameter at the point of interest) also gives you the Bayes Factor!
 This perhaps surprising result was described by Dickey and Lientz (1970), and they attribute it to Leonard "Jimmie" Savage.
@@ -267,13 +270,11 @@ var complexModelPosterior = Infer({method: "rejection", samples: 10000}, functio
 var savageDickeyDenomenator = Math.exp(kde(complexModelPrior).score(0.5))
 var savageDickeyNumerator = Math.exp(kde(complexModelPosterior).score(0.5))
 
-
 var savageDickeyRatio = savageDickeyNumerator / savageDickeyDenomenator
-print( savageDickeyRatio )
+savageDickeyRatio
 ~~~~
 
 (Note that we have approximated the densities using a [kernal density estimator](https://webppl.readthedocs.io/en/master/distributions.html#KDE). Another way to estimate the density is by looking at the expectation that $$p$$ is within $$0.05$$ of the target value $$p=0.5$$.)
-
 
 We have now gone through the fundamentals of Bayesian Data Analysis.
 In the [next chapter](05-patterns.html), we'll show you basic techniques for modeling causality among random variables. 
