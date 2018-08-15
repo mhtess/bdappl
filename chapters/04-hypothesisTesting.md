@@ -4,41 +4,90 @@ title: Comparing hypotheses
 description: "Hypothesis testing is model comparison"
 ---
 
-# Comparing hypotheses
-
 > “The Bayesian method is comparative. It compares the probabilities of the observed event on the null hypothesis and on the alternatives to it. In this respect, it is quite different from Fisher’s approach, which is absolute in the sense that it involves only a single consideration, the null hypothesis. All our uncertainty judgments should be comparative: there are no absolutes here.”  (Dennis Lindley, 1993)
 
-In the above examples, we've had a single data-analysis model and used the experimental data to learn about the parameters of the models and the descriptive adequacy of the models.
-Often as scientists, we are in the fortunate position of having multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
-This alternative model could be a "null model", as made popular by Null Hypothesis Significance Testing, but it need not be: It could simply be an alternative, substantive hypothesis. 
-For this example, we will compare our model to a null model, where the propensity to help is fixed to be 0.5
+In the examples so far, we've had a single data-analysis model and used the experimental data to learn about the latent parameters of the models and the descriptive adequacy of the models.
+Often as scientists, we are in the (fortunate) position of having multiple, distinct models in hand, and want to decide if one or another is a better description of the data.
 
-One way of performing model comparison is to construct a "supermodel", that includes each of the hypotheses as "submodels".
-In this case, the supermodel has a binary decision parameterthat we wanted to learn about (which one of the models was better).
-Model comparison is then a special case of learning about the parameters of a model.
-We did this by having a binary decision variable  (`flip(0.5)`) gate between which of our two models we let generate the data.
-We then go backwards (performing Bayesian inference) to decide which model was more likely to have generated the data we observed.
-Using this to now compare models:
+Consider a case where we have two hypotheses/models we wants to compare: $$\mathcal{M}_0$$ and $$\mathcal{M}_1$$
+If we want to be take the Bayesian to model comparison, we first specify our prior beliefs about each of the hypothesis: $$P(\mathcal{M}_0)$$ and $$P(\mathcal{M}_1)$$.
+Then, our *posterior belief* concerning the probability of $$\mathcal{M}_{0}$$ after observing data $$D$$ can be calculated by Bayes rule:
+
+$$ P(\mathcal{M}_{0} \mid D) = \frac{ P(D \mid \mathcal{M}_{0}) \cdot P(\mathcal{M}_{0}) }{P(D \mid \mathcal{M}_{0}) \cdot P(\mathcal{M}_{0})   +  P(D \mid \mathcal{M}_{1}) \cdot P(\mathcal{M}_{1}) }$$
+
+Schematically in WebPPL, this is just a straight-forward inference model, where the variable of interest ("which model is correct?") is a bernoulli random variable (a flip) and we infer the most likely hypothesis/model given the data.
+<!-- The most general Bayesian solution to this problem is to simply perform Bayesian inference over infer the most likely hypothesis given the data.  -->
+<!-- One fully Bayesian way of doing model comparison is to simply elaborate the probabilistic program to represent the uncertainty about which is the better hypothesis. -->
+
+
+~~~~ norun
+var model_comparison_model = function(){
+  var m = flip() ? Model_1 : Model_0
+  observe(m, d)
+  return m
+}
+~~~~
+
+This way of casting the model comparison problem is sometimes called a "supermodel", which includes each of the hypotheses as "submodels".
+
+Let's see an example: Consider our children helping study from the previous study. 
+Rather than estimate the `propensity_to_help`, we might want to perform a "Null Hypothesis" test: What is the probability that the behavior observed in our experiment (that 15 out of 20 kids helped) could be explained by true randomness (i.e., `propensity_to_help = 0.5`)?
+Note that this question ($$P(\mathcal{M}_0 \mid D)$$) can only be addressed by Bayesian methods.
+Frequentist methods (e.g., p-values) do not ascribe probabilities to hypotheses; a p-value is a description of the probability of the *data* *assuming* the null hypothesis is true: $$P(D \mid \mathcal{M}_0)$$. (A p-value is actually more complicated than this: It is the probability of the observed data, *comparable data*, or *more exteme data* assuming the null hypothesis is true. If you're not sure what exactly that means, then you are thinking about it correctly. p-values are famously unintuitive.)
+
+Bayesian Null Hypothesis Testing requires you to specify *both* hypotheses: It is not enough to define what the null hypothesis is.
+The alternative hypothesis is intuitively $$\mathcal{M}_1: \theta \neq 0.5$$, but we must be more specific. 
+One standard way of defining the null hypothesis is to put say that the parameter is drawn from a uniform distribution.(Note that this was the model from the previous chapter.)
+
 
 ~~~~
-var k = 7, n = 20;
+var k = 15, n = 20; // number of observed successes, total number of trials
 
-var compareModels = function() {
+var Null_model = Delta({v: 0.5}) // null hypothesis is a Delta distribution at 0.5
+var Alternative_model = Uniform({a: 0, b: 1})
+
+var super_model = function() {
 
   // binary decision variable for which hypothesis is better
-  var x = flip(0.5) ? "simple" : "complex";
-  var p = (x == "simple") ? 0.5 : uniform(0, 1);
+  var the_better_model = uniformDraw(["null", "alternative"])
+
+  var p = sample(the_better_model == "null" ? Null_model : Alternative_model)
 
   observe(Binomial({p: p, n: n}), k);
 
-  return {model: x}
+  return {the_better_model}
 }
 
-var opts = {model: compareModels, method: "rejection", samples: 2000};
+var opts = {model: super_model, method: "rejection", samples: 2000};
 print("We observed " + k + " successes out of " + n + " attempts")
 var modelPosterior = Infer(opts);
 viz(modelPosterior)
 ~~~~
+
+
+
+<!-- One fully Bayesian way of doing model comparison is to simply elaborate the probabilistic program to represent the uncertainty about which is the better hypothesis. -->
+
+
+
+<!-- Since $$P(\mathcal{M}_0) = P(\mathcal{M}_1)$$, this then reduces to: 
+ -->
+<!-- $$ P(\mathcal{M}_{0} \mid D) = \frac{ P(D \mid \mathcal{M}_{0})  }{P(D \mid \mathcal{M}_{0})  +  P(D \mid \mathcal{M}_{1}) }$$
+ -->
+
+
+<!-- Since there are only two hypotheses, we know that $$P(\mathcal{M}_0) + P(\mathcal{M}_1) = 1$$.
+A standard assumption would be to stipulate these prior beliefs be equal (no preference for either hypothesis/model *a priori*): $$P(\mathcal{M}_0) = P(\mathcal{M}_1) = 0.5$$.
+ -->
+
+
+<!-- $$ P(\text{hypothesis} \mid \text{data}) \propto \frac{P(\text{data} \mid \text{hypothesis}) \times P(\text{hypothesis})}{P(\text{data})} $$ -->
+
+
+
+<!-- 
+Here, we are implementing model comparison as a special case of learning about the parameters of a model (the "super_model"). 
+The parameter of interest is `the_better_model`.
 
 This supermodel is an example of Bayesian Null Hypothesis Testing.
 We consider a model that fixes one of its parameters to a pre-specified value of interest (here $$\mathcal{H_0} : p = 0.5$$).
@@ -46,42 +95,122 @@ This is sometimes referred to as a *null hypothesis*.
 The other model says that the parameter is free to vary.
 In the classical hypothesis testing framework, we would write: $${H_1} : p \neq 0.5$$.
 With Bayesian hypothesis testing, we must be explicit about what $$p$$ is (not just what p is not), so we write $${H_1} : p \sim \text{Uniform}(0, 1) $$.
-
+ -->
 One might have a conceptual worry: Isn't the second model just a more general case of the first model?
 That is, if the second model has a uniform distribution over `p`, then `p: 0.5` is included in the second model.
 This is what's called a *nested model*.
 
 Shouldn't the more general model always be better?
-If we're at a track, and you bet on horse A, and I bet on horse A and B, aren't I strictly in a better position than you?
-The answer is no, and the reason has to do with our metric for winning.
-Intuitively, we don't care whether your horse won or not, but how much money you win.
-How much money you win depends on how much money you bet, and the rule is, when we go to track, we have the same amount of money.
-
-In probabilistic models, our money is probabilities. Each model must allocate its probability so that it sums to 1.
-So my act of betting on horse A and horse B actually requires me to split my money (say, betting 50 / 50 on each).
-On the other hand, you put all your money on horse A (100 on A, 0 on B).
-If A wins, you will gain more money because you put more money down.
+If Bart and Lisa are at a track, and Lisa bets on horse A, and Bart bets on horse A and B, isn't Bart strictly in a better position than Lisa?
+Well, no.
+Gambling is not about whose horse won or not, but how much money you win.
+If Bart and Lisa each have $100: Lisa puts all of her money on Horse A, while Bart splits his money between Horse A and Horse B (betting $50 on each). 
+Then if Horse A wins, Bart and Lisa will both win money but Lisa will more money.
+In probabilistic models, the currency is probability. 
+Each model can allocate its probability over different parameters value but those probabilities must add to 1.
 
 This idea is called the principle of parsimony or Occam's razor.
 More complex models will be penalized for being more complex, intuitively because they will be diluting their predictions.
 At the same time, more complex models are more flexible and can capture a wider variety of data (they are able to bet on more horses, which increases the chance that they will win some money).
 Bayesian model comparison lets us weigh these costs and benefits.
 
+
+**Exercises**
+
+1. Under a frequentist binomial test, the p-value for 15 successes out of 20 trials is $$p = 0.0414$$. What does the Bayesian model comparison conclude? 
+
+2. Is the Bayesian or the Frequentist more conservative in this case? Why do you think that might be?
+
+3. Imagine we run another experiment where we collect 36 participants and 20 of them helped (`k = 20, n = 36`). What is the p-value under a binomial test? (You can use R, or some online gui.) What could you conclude from the p-value? What are the posterior model probabilities? What can you conclude from them?
+
+
 ## Bayes' factor
 
-What we are plotting above are **posterior model probabilities**.
-These are a function of the marginal likelihoods of the data under each hypothesis and the prior model probabilities (here, defined to be equal: `flip(0.5)`).
-Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the relative plausibility of the hypotheses?) and so often report the ratio of marginal likelihoods, a quantity known as a *Bayes Factor*.
+So far we have considered the **posterior model probabilities** as a way to quantitatively compare models.
+These are a function of the likelihoods of the data under each hypothesis and the prior model probabilities (above defined to be equal: `flip(0.5)`).
+Sometimes, scientists feel a bit strange about reporting values that are based on prior model probabilities (what if scientists have different priors as to the relative plausibility of the hypotheses?) and so often report the ratio of likelihoods, a quantity known as a *Bayes Factor*.
 
-> Marginal likelihood: The likelihood of the data averaged (marginalized) over the prior distribution over the parameters: $$\int_\theta P(d \mid \theta) \cdot P(\theta)$$. It is the average quality of predictions of the hypothesis for the observed data. In order for the marginal likelihood to be high, hypotheses needs to make a lot of good predictions. “A hypothesis that predicts everything predicts nothing”
+Often, the likelihood $$P(D | \mathcal{M})$$ is not just a single value because model $$\mathcal{M}$$ will have some latent parameter(s) $$\theta$$ that are not specified *a priori*. 
+For example, under $$\mathcal{M}_1$$, the `propensity_to_help` variable (which we will call $$\theta$$ for simplicity) is drawn from uniform distribution. 
+Thus, to compute $$P(D | \mathcal{M})$$, you must first consult $$P(D | \mathcal{M}, \theta)$$.
+For some values of $$\theta$$, $$P(D | \mathcal{M}, \theta)$$ will be high (e.g., if $$D$$ is 15 out of 20 heads, then $$P(D | \mathcal{M}, \theta)$$ will be highest when $$\theta = 0.75$$).
+For other values of $$\theta$$, $$P(D | \mathcal{M}, \theta)$$ will be low (e.g., $$\theta = 0.25$$ for 15 ouf of 20 heads). 
+$$P(D | \mathcal{M})$$ is the likelihood of the data $$D$$ under model $$\mathcal{M}$$ averaged over the parameters $$\theta$$. This is called the **marginal likelihood**.
+
+> Marginal likelihood: The likelihood of the data averaged (marginalized) over the prior distribution over the parameters: $$\int_\theta P(D \mid \theta) \cdot P(\theta)$$. It is the average quality of predictions of the hypothesis for the observed data. In order for the marginal likelihood to be high, hypotheses needs to make a lot of good predictions. “A hypothesis that predicts everything predicts nothing”
+
+The marginal likelihood is not itself directly interpretable but is interpretable in a comparative way.
+Hence, scientists often report the ratio of marginal likelihoods for two models, called a **Bayes Factor**.
 
 
-> Bayes Factor: The ratio of the marginal likelihoods for two hypotheses. $$BF_{10} = \frac{P(d \mid \mathcal{H_1})}{P(d \mid \mathcal{H_0})}$$. The Bayes Factor tells you how much better one hypothesis is at predicting the observed data than the other, taking into account the flexibility of each hypothesis.
+> Bayes Factor: The ratio of the marginal likelihoods for two hypotheses. $$BF_{10} = \frac{P(D \mid \mathcal{M_1})}{P(D \mid \mathcal{M_0})}$$. The Bayes Factor tells you how much better one hypothesis is at predicting the observed data than the other, taking into account the flexibility of each hypothesis.
 
 Bayes Factors have a continuous interpretation. Still, category judgments are sometimes useful. Check out the wikipedia entry on Bayes Factors for the common ways to [interpret Bayes Factors](https://en.wikipedia.org/wiki/Bayes_factor#Interpretation). 
 
+In order to compute a Bayes Factor, you just need to compute the marginal likelihoods for each model.
+Unfortunately, this is computationally challenging in the general case.
+(In general, estimating the integral over $$\theta$$ is difficult).
+Here, we'll discuss two ways of estimating the marginal likelihood, and then return to a special case of computing Bayes Factors which side-steps the issue of estimating marginal likelihoods.
+For a more in-depth discussion of several methods for calculating Bayes Factors, see [this helpful blogpost](http://michael-franke.github.io/statistics,/modeling/2017/07/07/BF_computation.html).
 
-Let's compute the Bayes' Factor, by computing the likelihood of the data under each hypothesis.
+### Estimation of Marginal Likelihood by forward sampling
+
+The most naive way of estimating marginal likelihoods is by "forward sampling".
+Recall, we want to compute the likelihood of the data averaged over the prior on parameters.
+
+
+~~~~
+var k = 7, n = 20;
+
+var complexModel = function(){
+  var p = uniform(0, 1);
+  return Math.exp(Binomial({p, n}).score(k)) // p(d | theta)
+}
+
+// approximate the integral by sampling
+var likelihood_Dist = repeat(10000, complexModel)
+var complexLikelihood = sum(likelihood_Dist) / likelihood_Dist.length
+
+// simple model doesn't have any parameters to integrate over
+var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
+
+var bayesFactor_01 = simpleLikelihood / complexLikelihood
+bayesFactor_01
+~~~~
+
+The technique of repeatedly sampling is very common and has it's own inference method in WebPPL called ["forward"](https://webppl.readthedocs.io/en/master/inference/methods.html#forward-sampling).
+
+~~~~
+var k = 7, n = 20;
+
+var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
+
+var complexModel = Infer({
+  model: function(){
+    var p = uniform(0, 1);
+    return binomial(p, n)
+  }, 
+  method: "forward", samples: 10000
+})
+
+var complexLikelihood = Math.exp(complexModel.score(k))
+
+var bayesFactor_01 = simpleLikelihood / complexLikelihood
+bayesFactor_01
+~~~~
+
+**Exercise**: How does the Bayes Factor in this case relate to posterior model probabilities above?
+
+
+
+### Estimation of Marginal Likelihood by Annealed Importance Sampling
+
+Forward sampling, though straight-forward to understand, is in practice tremendously inefficient (e.g., when your observed data `k` is really unlikely, which is easy to occur when you have a data set that is sufficiently large). 
+Current research in computer science is trying to develop better algorithms for approximating the marginal likelihood.
+One good technique is called [Annealed Importance Sampling](https://arxiv.org/abs/physics/9803008).
+
+
+[AIS docs](https://webppl.readthedocs.io/en/master/functions/other.html?highlight=ais#AIS)
 
 ~~~~
 var k = 7, n = 20;
@@ -103,12 +232,6 @@ bayesFactor_01
 ~~~~
 
 
-How does the Bayes Factor in this case relate to posterior model probabilities above?
-
-Here, we have estimated the likelihood of the data under the simple model using ["forward sampling"](https://webppl.readthedocs.io/en/master/inference/methods.html#forward-sampling), a simple inference algorithm that just repeatedly samples. 
-Often in practice this will be tremendously inefficient (e.g., when your observed data `k` is really unlikely, which is easy to occur when you have a data set that is sufficiently large). 
-Current research in computer science is trying to develop better algorithms for approximating the marginal likelihood.
-One good technique is called [Annealed Importance Sampling](https://arxiv.org/abs/physics/9803008), and will be available in WebPPL very soon. 
 
 ## Savage-Dickey method
 
@@ -151,7 +274,6 @@ print( savageDickeyRatio )
 
 (Note that we have approximated the densities using a [kernal density estimator](https://webppl.readthedocs.io/en/master/distributions.html#KDE). Another way to estimate the density is by looking at the expectation that $$p$$ is within $$0.05$$ of the target value $$p=0.5$$.)
 
-For more information about different methods of calculating Bayes Factors, see [this helpful blogpost](http://michael-franke.github.io/statistics,/modeling/2017/07/07/BF_computation.html).
 
 We have now gone through the fundamentals of Bayesian Data Analysis.
 In the [next chapter](05-patterns.html), we'll show you basic techniques for modeling causality among random variables. 

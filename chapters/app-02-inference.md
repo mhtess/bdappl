@@ -183,8 +183,8 @@ For BDA, this is usually achived using `observe`.
 Here is a summary of the three statements.
 
 ~~~~ norun
-// DOES NOT RUN
 factor(val)
-observe(Dist, val) === factor(Dist.score(val)) === condition(sample(Dist) == val)
+observe(Dist, val) === factor(Dist.score(val)) 
+                   === condition(sample(Dist) == val)
 condition(bool) === factor(bool ? 0 : -Infinity)
 ~~~~
