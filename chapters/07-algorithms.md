@@ -58,7 +58,27 @@ var model = function(){
 	return xs
 }
 
-var posterior = Infer({model, method: "MCMC", samples: 1000})
+var posterior = Infer({model, method: "MCMC", 
+                       samples: 1000, burn: 1000})
+viz.marginals(posterior)
+~~~~
+
+
+### [HMC](https://webppl.readthedocs.io/en/master/inference/methods.html#kernels)
+
+~~~~
+var model = function(){
+	var xs = repeat(10, function(){ uniform(0, 10) } )
+	var ys = repeat(10, function(){ uniform(0, 10) } )
+	map2(function(x, y){
+		factor(x + y)
+	}, xs, ys)
+	return xs
+}
+
+var posterior = Infer({model, method: "MCMC", 
+                       kernel: {HMC: {steps: 5, stepSize: 0.05}}, 
+                       samples: 1000, burn: 500})
 viz.marginals(posterior)
 ~~~~
 
