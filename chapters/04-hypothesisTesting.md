@@ -160,7 +160,7 @@ Recall, we want to compute the likelihood of the data averaged over the prior on
 
 
 ~~~~
-var k = 7, n = 20;
+var k = 15, n = 20;
 
 var complexModel = function(){
   var p = uniform(0, 1);
@@ -174,14 +174,14 @@ var complexLikelihood = sum(likelihood_Dist) / likelihood_Dist.length
 // simple model doesn't have any parameters to integrate over
 var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
 
-var bayesFactor_01 = simpleLikelihood / complexLikelihood
-bayesFactor_01
+var bayesFactor_10 = complexLikelihood / simpleLikelihood
+bayesFactor_10
 ~~~~
 
 The technique of repeatedly sampling is very common and has it's own inference method in WebPPL called ["forward"](https://webppl.readthedocs.io/en/master/inference/methods.html#forward-sampling).
 
 ~~~~
-var k = 7, n = 20;
+var k = 15, n = 20;
 
 var simpleLikelihood = Math.exp(Binomial({p: 0.5, n: n}).score(k))
 
@@ -195,12 +195,11 @@ var complexModel = Infer({
 
 var complexLikelihood = Math.exp(complexModel.score(k))
 
-var bayesFactor_01 = simpleLikelihood / complexLikelihood
-bayesFactor_01
+var bayesFactor_10 = complexLikelihood /  simpleLikelihood
+bayesFactor_10
 ~~~~
 
-**Exercise**: How does the Bayes Factor in this case relate to posterior model probabilities above?
-
+**Exercise**: How does the Bayes Factor in this case compare to posterior model probabilities above?
 
 
 ### Estimation of Marginal Likelihood by Annealed Importance Sampling
@@ -213,7 +212,7 @@ One good technique is called [Annealed Importance Sampling](https://arxiv.org/ab
 [AIS docs](https://webppl.readthedocs.io/en/master/functions/other.html?highlight=ais#AIS)
 
 ~~~~
-var k = 7, n = 20;
+var k = 15, n = 20;
 
 var complexModel = function(){
   var p = uniform(0, 1);
@@ -231,8 +230,8 @@ var log_likelihood_m1 = AIS(complexModel, {steps: 10000, samples: 5})
 // overkill: can just compute this via Binomial.score(k)
 var log_likelihood_m0 = AIS(simpleModel)
 
-var log_bf_01 = log_likelihood_m0 - log_likelihood_m1
-Math.exp(log_bf_01) // BF_01
+var log_bf_10 = log_likelihood_m1 - log_likelihood_m0
+Math.exp(log_bf_10) // BF_10
 ~~~~
 
 
@@ -249,7 +248,7 @@ The method is called the *Savage-Dickey density ratio* and is widely used in exp
 We would use it like so:
 
 ~~~~
-var k = 7, n = 20;
+var k = 15, n = 20;
 
 var complexModelPrior = Infer({method: "forward", samples: 10000}, function(){
   var p = uniform(0, 1);
