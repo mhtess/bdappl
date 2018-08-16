@@ -124,6 +124,8 @@ Bayesian model comparison lets us weigh these costs and benefits.
 3. Imagine we run another experiment where we collect 36 participants and 20 of them helped (`k = 20, n = 36`). What is the p-value under a binomial test? (You can use R, or some online gui.) What could you conclude from the p-value? What are the posterior model probabilities? What can you conclude from them?
 
 
+
+
 ## Bayes' factor
 
 So far we have considered the **posterior model probabilities** as a way to quantitatively compare models.
@@ -274,6 +276,47 @@ savageDickeyRatio
 ~~~~
 
 (Note that we have approximated the densities using a [kernal density estimator](https://webppl.readthedocs.io/en/master/distributions.html#KDE). Another way to estimate the density is by looking at the expectation that $$p$$ is within $$0.05$$ of the target value $$p=0.5$$.)
+
+
+
+### The research assistants
+
+Recall our example from the previous chapter about two research assistants who returned wildly different results. 
+We had the intuition that they were doing something different from one another.
+Is there a way to quantify our degree of belief in that proposition?
+
+We can take a model comparison approach, comparing a model where we posit a single latent parameter (research assistants are doing / measuring the same thing) vs. a model where we posit different parameters for the different research assistants. 
+The latter model has more flexibility, but it also probably predicts the observed data better.
+
+~~~~
+// "Kids who help" in 2 experiments
+var k1 = 0;
+var k2 = 10;
+
+// Number of kids in 2 experiments
+var n1 = 10;
+var n2 = 10;
+
+var simple_model = function(){
+  var p1 = uniform(0,1);
+  observe(Binomial({p: p1, n: n1}), k1);
+  var p2 = p1;
+  observe(Binomial({p: p2, n: n2}), k2);
+}
+
+var complex_model = function(){
+  var p1 = uniform(0,1);
+  observe(Binomial({p: p1, n: n1}), k1);
+  var p2 = uniform(0, 1)
+  observe(Binomial({p: p2, n: n2}), k2);
+}
+
+var ll1 = AIS(simple_model, {steps: 10000, samples: 10})
+var ll2 = AIS(complex_model, {steps: 10000, samples: 10})
+
+Math.exp(ll2 - ll1)
+~~~~
+
 
 We have now gone through the fundamentals of Bayesian Data Analysis.
 In the [next chapter](05-patterns.html), we'll show you basic techniques for modeling causality among random variables. 
